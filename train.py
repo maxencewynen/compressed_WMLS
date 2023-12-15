@@ -43,7 +43,7 @@ parser.add_argument('--cache_rate', default=1.0, type=float)
 parser.add_argument('--val_interval', type=int, default=5, help='Validation every n-th epochs')
 parser.add_argument('--threshold', type=float, default=0.5, help='Probability threshold')
 
-parser.add_argument('--wandb_project', type=str, default='WMLSS', help='wandb project name')
+parser.add_argument('--wandb_project', type=str, default='compressed_WMLS', help='wandb project name')
 parser.add_argument('--name', default="idiot without a name", help='Wandb run name')
 parser.add_argument('--force_restart', default=False, action='store_true',
                     help="force the training to restart at 0 even if a checkpoint was found")
@@ -113,7 +113,7 @@ def main(args):
     set_determinism(seed=seed_val)
 
     device = get_default_device()
-    torch.multiprocessing.set_sharing_strategy('file_system')
+    #torch.multiprocessing.set_sharing_strategy('file_system')
 
     save_dir = f'{args.save_path}/{args.name}'
     if not os.path.exists(save_dir):
@@ -147,8 +147,8 @@ def main(args):
             print(f"Retrieving pretrained model from {args.path_model}")
             raise NotImplementedError()
         else:
-            print(f"Initializing new model with {len(args.I)} input channels")
-            model = UNet3D(in_channels=len(args.I), num_classes=2)
+            print(f"Initializing new model with 1 input channels")
+            model = UNet3D(in_channels=1, num_classes=2)
 
         model.to(device)
         optimizer = torch.optim.Adam([{'params': model.parameters(), 'lr': args.learning_rate}],
@@ -163,10 +163,10 @@ def main(args):
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.n_epochs)
 
     # Initialize dataloaders
-    train_loader = get_train_dataloader(data_dir=args.data_dir,
+    train_loader = get_train_dataloader(data_dir=os.path.join(args.data_dir, "all"),
                                         num_workers=args.num_workers,
                                         cache_rate=args.cache_rate)
-    val_loader = get_val_dataloader(data_dir=args.data_dir,
+    val_loader = get_val_dataloader(data_dir=os.path.join(args.data_dir, "all"),
                                     num_workers=args.num_workers,
                                     cache_rate=args.cache_rate)
 

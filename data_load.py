@@ -72,11 +72,11 @@ def get_val_transforms():
     """
     return Compose(
         [
-            LoadImaged(keys=("image", "label")),
-            AddChanneld(keys=("image", "label")),
+            LoadImaged(keys=("image", "label", "brain_mask")),
+            AddChanneld(keys=("image", "label", "brain_mask")),
             Lambdad(keys="label", func=lambda x: (x > 0). astype(np.uint8)),
             NormalizeIntensityd(keys=("image",), nonzero=True),
-            ToTensord(keys=("image", "label")),
+            ToTensord(keys=("image", "label", "brain_mask")),
         ]
     )
 
