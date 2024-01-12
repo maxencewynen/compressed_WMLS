@@ -111,7 +111,7 @@ def main(args):
             seg[seg < th] = 0
             seg = np.squeeze(seg)
 
-            seg = remove_small_lesions_from_binary_segmentation(seg, voxel_size=14)
+            seg = remove_small_lesions_from_binary_segmentation(seg, voxel_size=spatial_shape)
 
             filename = filename_or_obj[:14] + "_pred-binary.nii.gz"
             filepath = os.path.join(path_pred, filename)
