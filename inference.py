@@ -19,8 +19,8 @@ parser.add_argument('--path_pred', type=str, required=True,
 parser.add_argument('--path_model', type=str, default='',
                     help='Specify the path to the trained model')
 # data
-parser.add_argument('--path_data', type=str, required=True, default='~/data/bxl',
-                    help='Specify the path to the data directory where img/ labels/ (and bm/) directories can be found')
+parser.add_argument('--path_data', type=str, default='/dir/scratchL/mwynen/data/cusl_wml',
+                    help='Specify the path to the data directory')
 parser.add_argument('--test', action="store_true", default=False,
                     help="whether to use the test set or not. (default to validation set)")
 # parallel computation
@@ -47,13 +47,13 @@ def main(args):
     torch.multiprocessing.set_sharing_strategy('file_system')
 
     '''' Initialise dataloaders '''
-    val_loader = get_val_dataloader(data_dir=args.path_data,
+    val_loader = get_val_dataloader(data_dir=os.path.join(args.path_data, "all"),
                                     num_workers=args.num_workers,
                                     test=args.test,
                                     cache_rate=0)
 
     ''' Load trained model  '''
-    in_channels = len(args.sequences)
+    in_channels = 1 
     path_pred = os.path.join(args.path_pred, os.path.basename(os.path.dirname(args.path_model)))
     os.makedirs(path_pred, exist_ok=True)
 
@@ -88,9 +88,9 @@ def main(args):
 
             # Apply brainmask
             semantic_pred *= foreground_mask
-
+          
             # get image metadata
-            meta_dict = args.sequences[0] + "_meta_dict"
+            meta_dict = "image" + "_meta_dict"
             original_affine = batch_data[meta_dict]['original_affine'][0]
             affine = batch_data[meta_dict]['affine'][0]
             spatial_shape = batch_data[meta_dict]['spatial_shape'][0]
@@ -111,7 +111,7 @@ def main(args):
             seg[seg < th] = 0
             seg = np.squeeze(seg)
 
-            seg = remove_small_lesions_from_binary_segmentation(seg)
+            seg = remove_small_lesions_from_binary_segmentation(seg, voxel_size=14)
 
             filename = filename_or_obj[:14] + "_pred-binary.nii.gz"
             filepath = os.path.join(path_pred, filename)
