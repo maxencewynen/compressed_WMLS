@@ -93,6 +93,7 @@ def main(args):
             meta_dict = "image" + "_meta_dict"
             original_affine = batch_data[meta_dict]['original_affine'][0]
             affine = batch_data[meta_dict]['affine'][0]
+            voxel_size = tuple(batch_data[meta_dict]['pixdim'][0][1:4])
             spatial_shape = batch_data[meta_dict]['spatial_shape'][0]
             filename_or_obj = batch_data[meta_dict]['filename_or_obj'][0]
             filename_or_obj = os.path.basename(filename_or_obj)
@@ -111,7 +112,7 @@ def main(args):
             seg[seg < th] = 0
             seg = np.squeeze(seg)
 
-            seg = remove_small_lesions_from_binary_segmentation(seg, voxel_size=spatial_shape)
+            seg = remove_small_lesions_from_binary_segmentation(seg, voxel_size=voxel_size)
 
             filename = filename_or_obj[:14] + "_pred-binary.nii.gz"
             filepath = os.path.join(path_pred, filename)
@@ -123,7 +124,7 @@ def main(args):
 
             if args.compute_dice:
                 if args.test:
-                    gt = nib.load(os.path.join(args.path_data, 'test', 'labels',
+                    gt = nib.load(os.path.join(args.path_data, 'all', 'labels',
                                                filename_or_obj[:14] + "_mask-classes.nii.gz")).get_fdata()
                     gt = (gt > 0).astype(np.uint8)
                 else:

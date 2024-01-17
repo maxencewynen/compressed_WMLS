@@ -132,7 +132,6 @@ def get_val_dataloader(data_dir, num_workers, cache_rate=0.1, test=False):
     Returns:
       monai.data.DataLoader() class object.
     """
-
     assert os.path.exists(data_dir), f"data_dir path does not exist ({data_dir})"
 
     images = sorted(
