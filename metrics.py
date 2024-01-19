@@ -4,6 +4,7 @@ import nibabel as nib
 import pandas as pd
 import numpy as np
 import nibabel as nib
+from postprocess import *
 
 
 def dice_metric(ground_truth, predictions):
@@ -98,24 +99,21 @@ def compute_metrics(args):
 
     metrics_dict = {"Subject_ID": [], "File": [], "DSC": [], "nDSC": []}
 
-    dd = "test" if args.test else "val"
-    ref_dir = os.path.join(args.ref_path, dd, "labels")
+    ref_dir = args.ref_path
     
-    for ref_file in sorted(os.listdir(ref_dir)):
-        if ref_file.endswith("mask-instances.nii.gz"):
-            print(ref_file)
-            subj_id = ref_file.split("_ses")[0].split("sub-")[-1]  # Extracting subject ID
-            pred_file = "sub-" + subj_id + "_ses-01_pred-binary.nii.gz"
-            pred_file_path = os.path.join(args.pred_path, pred_file)
+    for pred_file in sorted(os.listdir(args.pred_path)):
+        if pred_file.endswith("binary.nii.gz"):
+            print(pred_file)
+            subj_id = pred_file.split("_ses")[0].split("sub-")[-1]  # Extracting subject ID
+            ref_file = "sub-" + subj_id + "_ses-01_mask-instances.nii.gz"
+            ref_file_path = os.path.join(ref_dir, ref_file)
 
-            if not os.path.exists(pred_file_path):
-                print(f"No prediction found for {pred_file}")
-                continue
+            pred_img = nib.load(os.path.join(args.pred_path, pred_file)).get_fdata()
+            ref_img = nib.load(ref_file_path)
+            voxel_size = ref_img.header.get_zooms()
+            ref_img = remove_small_lesions_from_binary_segmentation((ref_img.get_fdata()>0).astype(np.uint8), voxel_size)
 
-            ref_img = nib.load(os.path.join(ref_dir, ref_file))
-            pred_img = nib.load(pred_file_path).get_fdata()
-
-            if set(np.unique(pred_img)) == {0, 1}:
+            if not set(np.unique(pred_img)) == {0, 1}:
                 print("[WARNING] Prediction image should be binary. Skipping this subject...")
                 continue
 
@@ -129,6 +127,7 @@ def compute_metrics(args):
     model_name = os.path.basename(os.path.dirname(args.pred_path))
     # Convert dictionary to dataframe and save as CSV
     df = pd.DataFrame(metrics_dict)
+    dd = "test" if args.test else "val"
     df.to_csv(os.path.join(args.pred_path, f"metrics_{model_name}_{dd}.csv"), index=False)
 
 

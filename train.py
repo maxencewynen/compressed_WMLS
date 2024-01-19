@@ -145,7 +145,8 @@ def main(args):
     else:
         if args.path_model is not None:
             print(f"Retrieving pretrained model from {args.path_model}")
-            raise NotImplementedError()
+            model = UNet3D(in_channels=1, num_classes=2)
+            model.load_state_dict(torch.load(args.path_model))
         else:
             print(f"Initializing new model with 1 input channels")
             model = UNet3D(in_channels=1, num_classes=2)
